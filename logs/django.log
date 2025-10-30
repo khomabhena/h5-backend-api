@@ -1,0 +1,310 @@
+INFO 2025-10-28 14:58:24,309 autoreload 18740 34900 Watching for file changes with StatReloader
+WARNING 2025-10-28 15:50:52,097 log 18740 30408 Not Found: /
+WARNING 2025-10-28 15:50:52,098 basehttp 18740 30408 "GET / HTTP/1.1" 404 2834
+WARNING 2025-10-28 15:50:52,502 log 18740 30408 Not Found: /favicon.ico
+WARNING 2025-10-28 15:50:52,503 basehttp 18740 30408 "GET /favicon.ico HTTP/1.1" 404 2885
+INFO 2025-10-28 15:51:00,596 basehttp 18740 30408 "GET /admin HTTP/1.1" 301 0
+INFO 2025-10-28 15:51:00,625 basehttp 18740 28908 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-10-28 15:51:01,077 basehttp 18740 28908 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4173
+INFO 2025-10-28 15:51:01,498 basehttp 18740 13656 "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-10-28 15:51:01,504 basehttp 18740 25948 "GET /static/admin/css/login.css HTTP/1.1" 200 951
+INFO 2025-10-28 15:51:01,515 basehttp 18740 26360 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-10-28 15:51:01,516 basehttp 18740 32964 "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-10-28 15:51:01,518 basehttp 18740 28908 "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-10-28 15:51:01,543 basehttp 18740 32444 "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-10-28 15:51:01,576 basehttp 18740 28908 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-10-28 15:51:06,088 basehttp 18740 28908 "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-10-28 15:51:06,198 basehttp 18740 28908 "GET /admin/ HTTP/1.1" 200 8467
+INFO 2025-10-28 15:51:06,268 basehttp 18740 28908 "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-10-28 15:51:06,302 basehttp 18740 32444 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-10-28 15:51:06,304 basehttp 18740 28908 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-10-28 15:51:11,304 basehttp 18740 28908 "GET /admin/payments/h5app/add/ HTTP/1.1" 200 16782
+INFO 2025-10-28 15:51:11,364 basehttp 18740 28908 "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-10-28 15:51:11,393 basehttp 18740 32964 "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-10-28 15:51:11,407 basehttp 18740 25948 "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-10-28 15:51:11,408 basehttp 18740 13656 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-10-28 15:51:11,422 basehttp 18740 32964 "GET /static/admin/css/widgets.css HTTP/1.1" 200 11973
+INFO 2025-10-28 15:51:11,432 basehttp 18740 32444 "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-10-28 15:51:11,460 basehttp 18740 28908 "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-10-28 15:51:11,467 basehttp 18740 25948 "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-10-28 15:51:11,481 basehttp 18740 32444 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-10-28 15:51:11,482 basehttp 18740 13656 "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-10-28 15:51:11,498 basehttp 18740 26360 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-10-28 15:51:11,558 basehttp 18740 26360 "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-10-28 15:51:11,734 basehttp 18740 32964 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-10-28 15:52:57,249 basehttp 18740 32964 "POST /admin/payments/h5app/add/ HTTP/1.1" 200 17355
+INFO 2025-10-28 15:52:57,287 basehttp 18740 32964 "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-10-28 15:55:25,874 basehttp 18740 32964 "POST /admin/payments/h5app/add/ HTTP/1.1" 200 17156
+INFO 2025-10-28 15:55:25,909 basehttp 18740 32964 "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-10-28 15:55:57,812 basehttp 18740 32964 "POST /admin/payments/h5app/add/ HTTP/1.1" 302 0
+INFO 2025-10-28 15:55:58,203 basehttp 18740 32964 "GET /admin/payments/h5app/ HTTP/1.1" 200 13522
+INFO 2025-10-28 15:55:58,252 basehttp 18740 32444 "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-10-28 15:55:58,267 basehttp 18740 13656 "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-10-28 15:55:58,267 basehttp 18740 26360 "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-10-28 15:55:58,268 basehttp 18740 32964 "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-10-28 15:55:58,329 basehttp 18740 32964 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-10-28 15:55:58,330 basehttp 18740 32444 "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-10-28 15:55:58,330 basehttp 18740 26360 "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-10-28 15:55:58,330 basehttp 18740 13656 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-10-28 15:56:34,850 basehttp 18740 32444 "GET /api/h5-apps HTTP/1.1" 301 0
+INFO 2025-10-28 15:56:34,874 basehttp 18740 26360 "GET /api/h5-apps/ HTTP/1.1" 200 432
+INFO 2025-10-28 16:09:01,788 basehttp 18740 35872 "GET /swagger HTTP/1.1" 301 0
+INFO 2025-10-28 16:09:01,858 basehttp 18740 36780 "GET /swagger/ HTTP/1.1" 200 2445
+INFO 2025-10-28 16:09:01,916 basehttp 18740 36780 "GET /static/drf-yasg/style.css HTTP/1.1" 200 1047
+INFO 2025-10-28 16:09:01,956 basehttp 18740 32668 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 145206
+INFO 2025-10-28 16:09:01,980 basehttp 18740 33192 "GET /static/drf-yasg/insQ.min.js HTTP/1.1" 200 2093
+INFO 2025-10-28 16:09:01,995 basehttp 18740 36780 "GET /static/drf-yasg/swagger-ui-init.js HTTP/1.1" 200 15480
+INFO 2025-10-28 16:09:02,025 basehttp 18740 9612 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1046583
+INFO 2025-10-28 16:09:02,090 basehttp 18740 35784 "GET /static/drf-yasg/immutable.min.js HTTP/1.1" 200 56904
+INFO 2025-10-28 16:09:02,169 basehttp 18740 35432 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 322863
+INFO 2025-10-28 16:09:02,422 basehttp 18740 35784 "GET /static/drf-yasg/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 200 628
+ERROR 2025-10-28 16:09:02,537 log 18740 35432 Internal Server Error: /swagger/
+Traceback (most recent call last):
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\views\generic\base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\views.py", line 129, in get
+    schema = generator.get_schema(request, self.public)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\generators.py", line 337, in get_schema
+    paths, prefix = self.get_paths(endpoints, components, request, public)
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\generators.py", line 561, in get_paths
+    operation = self.get_operation(
+        view, path, prefix, method, components, request
+    )
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\generators.py", line 609, in get_operation
+    operation = view_inspector.get_operation(operation_keys)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 58, in get_operation
+    responses = self.get_responses()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 224, in get_responses
+    response_serializers = self.get_response_serializers()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 289, in get_response_serializers
+    responses = self.get_default_responses()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 257, in get_default_responses
+    default_schema = self.serializer_to_schema(default_schema) or ""
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 551, in serializer_to_schema
+    return self.probe_inspectors(
+           ~~~~~~~~~~~~~~~~~~~~~^
+        self.field_inspectors,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        {"field_inspectors": self.field_inspectors},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 137, in probe_inspectors
+    result = method(obj, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\field.py", line 55, in get_schema
+    return self.probe_field_inspectors(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        serializer, openapi.Schema, self.use_definitions
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 277, in probe_field_inspectors
+    return self.probe_inspectors(
+           ~~~~~~~~~~~~~~~~~~~~~^
+        self.field_inspectors,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 137, in probe_inspectors
+    result = method(obj, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\field.py", line 154, in field_to_swagger_object
+    actual_schema = definitions.setdefault(ref_name, make_schema_definition)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\openapi.py", line 822, in setdefault
+    ret = maker()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\field.py", line 125, in make_schema_definition
+    for property_name, child in serializer.fields.items():
+                                ^^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\serializers.py", line 374, in fields
+    for key, value in self.get_fields().items():
+                      ~~~~~~~~~~~~~~~^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\serializers.py", line 1085, in get_fields
+    extra_kwargs = self.get_extra_kwargs()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\serializers.py", line 1408, in get_extra_kwargs
+    raise TypeError(
+    ...<2 lines>...
+    )
+TypeError: The `read_only_fields` option must be a list or tuple. Got str.
+ERROR 2025-10-28 16:09:02,553 basehttp 18740 35432 "GET /swagger/?format=openapi HTTP/1.1" 500 213091
+INFO 2025-10-28 16:09:19,486 basehttp 18740 35432 "GET /redoc HTTP/1.1" 301 0
+INFO 2025-10-28 16:09:19,530 basehttp 18740 35784 "GET /redoc/ HTTP/1.1" 200 960
+INFO 2025-10-28 16:09:19,613 basehttp 18740 35784 "GET /static/drf-yasg/redoc-init.js HTTP/1.1" 200 2566
+INFO 2025-10-28 16:09:19,668 basehttp 18740 9612 "GET /static/drf-yasg/redoc/redoc.min.js HTTP/1.1" 200 1042511
+ERROR 2025-10-28 16:09:19,950 log 18740 9612 Internal Server Error: /redoc/
+Traceback (most recent call last):
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\views\generic\base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\views.py", line 129, in get
+    schema = generator.get_schema(request, self.public)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\generators.py", line 337, in get_schema
+    paths, prefix = self.get_paths(endpoints, components, request, public)
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\generators.py", line 561, in get_paths
+    operation = self.get_operation(
+        view, path, prefix, method, components, request
+    )
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\generators.py", line 609, in get_operation
+    operation = view_inspector.get_operation(operation_keys)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 58, in get_operation
+    responses = self.get_responses()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 224, in get_responses
+    response_serializers = self.get_response_serializers()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 289, in get_response_serializers
+    responses = self.get_default_responses()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\view.py", line 257, in get_default_responses
+    default_schema = self.serializer_to_schema(default_schema) or ""
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 551, in serializer_to_schema
+    return self.probe_inspectors(
+           ~~~~~~~~~~~~~~~~~~~~~^
+        self.field_inspectors,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        {"field_inspectors": self.field_inspectors},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 137, in probe_inspectors
+    result = method(obj, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\field.py", line 55, in get_schema
+    return self.probe_field_inspectors(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        serializer, openapi.Schema, self.use_definitions
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 277, in probe_field_inspectors
+    return self.probe_inspectors(
+           ~~~~~~~~~~~~~~~~~~~~~^
+        self.field_inspectors,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\base.py", line 137, in probe_inspectors
+    result = method(obj, **kwargs)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\field.py", line 154, in field_to_swagger_object
+    actual_schema = definitions.setdefault(ref_name, make_schema_definition)
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\openapi.py", line 822, in setdefault
+    ret = maker()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\drf_yasg\inspectors\field.py", line 125, in make_schema_definition
+    for property_name, child in serializer.fields.items():
+                                ^^^^^^^^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\serializers.py", line 374, in fields
+    for key, value in self.get_fields().items():
+                      ~~~~~~~~~~~~~~~^^
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\serializers.py", line 1085, in get_fields
+    extra_kwargs = self.get_extra_kwargs()
+  File "C:\Users\KholwaniMabhena\AppData\Local\Programs\Python\Python313\Lib\site-packages\rest_framework\serializers.py", line 1408, in get_extra_kwargs
+    raise TypeError(
+    ...<2 lines>...
+    )
+TypeError: The `read_only_fields` option must be a list or tuple. Got str.
+INFO 2025-10-28 16:09:19,955 basehttp 18740 35784 "GET /static/drf-yasg/redoc/redoc-logo.png HTTP/1.1" 200 4969
+ERROR 2025-10-28 16:09:19,959 basehttp 18740 9612 "GET /redoc/?format=openapi HTTP/1.1" 500 212888
+INFO 2025-10-28 16:15:46,171 basehttp 18740 18328 "GET /admin/ HTTP/1.1" 200 8909
+INFO 2025-10-28 16:15:46,199 basehttp 18740 18328 "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,217 basehttp 18740 18328 "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,221 basehttp 18740 36556 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,222 basehttp 18740 26332 "GET /static/admin/css/dashboard.css HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,223 basehttp 18740 28016 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,226 basehttp 18740 26008 "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,233 basehttp 18740 26008 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,242 basehttp 18740 26008 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2025-10-28 16:15:46,242 basehttp 18740 26332 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2025-10-28 16:16:39,481 basehttp 18740 26332 "GET /api/payments HTTP/1.1" 301 0
+INFO 2025-10-28 16:16:39,499 basehttp 18740 26008 "GET /api/payments/ HTTP/1.1" 200 52
+WARNING 2025-10-28 16:17:29,576 log 18740 26008 Not Found: /api/h5-payments
+WARNING 2025-10-28 16:17:29,578 basehttp 18740 26008 "GET /api/h5-payments HTTP/1.1" 404 4998
+WARNING 2025-10-28 16:17:51,837 log 18740 26008 Not Found: /api/h5-payments
+WARNING 2025-10-28 16:17:51,838 basehttp 18740 26008 "GET /api/h5-payments HTTP/1.1" 404 4998
+INFO 2025-10-28 16:18:11,653 basehttp 18740 26008 "GET /api/h5-apps/ HTTP/1.1" 200 432
+WARNING 2025-10-28 16:18:18,886 log 18740 26008 Not Found: /api/h5-appsl/
+WARNING 2025-10-28 16:18:18,889 basehttp 18740 26008 "GET /api/h5-appsl/ HTTP/1.1" 404 4992
+INFO 2025-10-30 12:30:08,163 autoreload 20796 27100 Watching for file changes with StatReloader
+WARNING 2025-10-30 12:30:23,880 log 20796 29876 Not Found: /
+WARNING 2025-10-30 12:30:23,882 basehttp 20796 29876 "GET / HTTP/1.1" 404 2564
+WARNING 2025-10-30 12:30:24,136 log 20796 29876 Not Found: /favicon.ico
+WARNING 2025-10-30 12:30:24,137 basehttp 20796 29876 "GET /favicon.ico HTTP/1.1" 404 2615
+WARNING 2025-10-30 12:30:41,425 log 20796 29876 Not Found: /api/paymrnt/callback
+WARNING 2025-10-30 12:30:41,426 basehttp 20796 29876 "GET /api/paymrnt/callback HTTP/1.1" 404 4098
+INFO 2025-10-30 12:31:01,455 basehttp 20796 29876 "GET /api/payment/callback HTTP/1.1" 301 0
+WARNING 2025-10-30 12:31:01,462 log 20796 28848 Method Not Allowed: /api/payment/callback/
+WARNING 2025-10-30 12:31:01,463 basehttp 20796 28848 "GET /api/payment/callback/ HTTP/1.1" 405 40
+WARNING 2025-10-30 12:31:59,942 log 20796 27472 Method Not Allowed: /api/payment/callback/
+WARNING 2025-10-30 12:31:59,946 basehttp 20796 27472 "GET /api/payment/callback/ HTTP/1.1" 405 40
+ERROR 2025-10-30 12:32:08,342 views 20796 27472 Invalid callback data: {'ciphertext': [ErrorDetail(string='This field is required.', code='required')], 'payment_ref': [ErrorDetail(string='This field is required.', code='required')]}
+WARNING 2025-10-30 12:32:08,343 log 20796 27472 Bad Request: /api/payment/callback/
+WARNING 2025-10-30 12:32:08,344 basehttp 20796 27472 "POST /api/payment/callback/ HTTP/1.1" 400 49
+ERROR 2025-10-30 12:35:36,775 views 20796 31084 Invalid callback data: {'ciphertext': [ErrorDetail(string='This field is required.', code='required')], 'payment_ref': [ErrorDetail(string='This field is required.', code='required')]}
+WARNING 2025-10-30 12:35:36,779 log 20796 31084 Bad Request: /api/payment/callback/
+WARNING 2025-10-30 12:35:36,780 basehttp 20796 31084 "POST /api/payment/callback/ HTTP/1.1" 400 49
+INFO 2025-10-30 13:27:05,190 autoreload 20796 27100 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-30 13:27:06,750 autoreload 30212 31912 Watching for file changes with StatReloader
+INFO 2025-10-30 13:27:23,330 autoreload 30212 31912 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-30 13:27:24,816 autoreload 27096 21224 Watching for file changes with StatReloader
+WARNING 2025-10-30 13:28:18,381 log 27096 1280 Method Not Allowed: /api/payment/callback/
+WARNING 2025-10-30 13:28:18,383 basehttp 27096 1280 "GET /api/payment/callback/ HTTP/1.1" 405 40
+WARNING 2025-10-30 13:28:21,157 log 27096 1280 Method Not Allowed: /api/payment/callback/
+WARNING 2025-10-30 13:28:21,159 basehttp 27096 1280 "GET /api/payment/callback/ HTTP/1.1" 405 40
+WARNING 2025-10-30 13:28:24,373 log 27096 1280 Method Not Allowed: /api/payment/callback/
+WARNING 2025-10-30 13:28:24,375 basehttp 27096 1280 "GET /api/payment/callback/ HTTP/1.1" 405 40
+WARNING 2025-10-30 13:28:25,660 log 27096 1280 Method Not Allowed: /api/payment/callback/
+WARNING 2025-10-30 13:28:25,664 basehttp 27096 1280 "GET /api/payment/callback/ HTTP/1.1" 405 40
+WARNING 2025-10-30 13:28:32,305 views 27096 5156 Callback received without required fields; bypassing processing and returning SUCCESS
+INFO 2025-10-30 13:28:32,307 basehttp 27096 5156 "POST /api/payment/callback/ HTTP/1.1" 200 18
+INFO 2025-10-30 13:46:38,265 autoreload 27096 21224 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-30 13:46:39,714 autoreload 22740 13092 Watching for file changes with StatReloader
+INFO 2025-10-30 13:51:09,319 autoreload 22740 13092 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-30 13:51:10,855 autoreload 2112 32152 Watching for file changes with StatReloader
+INFO 2025-10-30 13:51:31,768 autoreload 2112 32152 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-30 13:51:33,189 autoreload 25756 28728 Watching for file changes with StatReloader
+INFO 2025-10-30 13:52:45,456 autoreload 25756 28728 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-30 13:52:46,720 autoreload 8500 20292 Watching for file changes with StatReloader
+INFO 2025-10-30 13:55:57,718 views 8500 28676 Callback payload: {}
+INFO 2025-10-30 13:55:57,722 basehttp 8500 28676 "POST /api/payment/callback/ HTTP/1.1" 200 18
