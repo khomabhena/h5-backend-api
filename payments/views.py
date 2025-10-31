@@ -238,7 +238,8 @@ def payment_callback(request):
         callback_dir = Path(settings.BASE_DIR) / 'callback-payload'
         callback_dir.mkdir(exist_ok=True)
         
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
+        # Format: callback_HHMMSS_DDMMYYYY.json (time first, date with DDMMYYYY format)
+        timestamp = datetime.now().strftime('%H%M%S_%d%m%Y')
         filename = f"callback_{timestamp}.json"
         filepath = callback_dir / filename
         
@@ -280,7 +281,7 @@ def payment_callback(request):
             {"code": "ERROR", "message": "App not found"},
             status=status.HTTP_404_NOT_FOUND
         )
-    
+        
     # Decrypt the ciphertext
     try:
         decrypted_data = DecryptionService.decrypt_ciphertext(
@@ -340,10 +341,10 @@ def payment_callback(request):
             logger.info(f"Created new payment record: {payment_ref}")
         
         # Update payment with decrypted data
-        payment.ciphertext = ciphertext
-        payment.decrypted_data = decrypted_data
-        payment.callback_received_at = timezone.now()
-        
+            payment.ciphertext = ciphertext
+            payment.decrypted_data = decrypted_data
+            payment.callback_received_at = timezone.now()
+            
         # Update amount if provided
         if order_amount or paid_amount:
             amount = float(order_amount or paid_amount) / 100
@@ -370,7 +371,7 @@ def payment_callback(request):
         
         payment.save()
         logger.info(f"Updated payment {payment_ref} with status: {payment.status}")
-        
+    
     except Exception as e:
         logger.error(f"Error processing payment data: {str(e)}")
         return Response(
