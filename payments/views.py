@@ -163,21 +163,54 @@ def payment_callback(request):
     except Exception as e:
         logger.warning(f"Could not capture raw body: {str(e)}")
     
-    # Convert request.data to dict if needed
-    if hasattr(request.data, 'dict'):
-        payload_data = request.data.dict()
+    # Parse JSON from raw body to ensure full ciphertext is captured
+    # DRF's request.data might truncate very long strings
+    payload_data = {}
+    if raw_body:
+        try:
+            import json
+            payload_data = json.loads(raw_body)
+            logger.info(f"Parsed payload from raw_body: {len(raw_body)} chars")
+        except Exception as e:
+            logger.warning(f"Failed to parse raw_body as JSON: {str(e)}, falling back to request.data")
+            # Fallback to request.data if raw_body parsing fails
+            if hasattr(request.data, 'dict'):
+                payload_data = request.data.dict()
+            else:
+                payload_data = dict(request.data)
     else:
-        payload_data = dict(request.data)
+        # Fallback to request.data if raw_body not available
+        if hasattr(request.data, 'dict'):
+            payload_data = request.data.dict()
+        else:
+            payload_data = dict(request.data)
     
     # Ensure ciphertext is fully captured (may be very long)
     ciphertext_full = payload_data.get('ciphertext', '')
     if ciphertext_full:
-        logger.info(f"Ciphertext length: {len(ciphertext_full)} characters")
+        logger.info(f"Ciphertext length in payload: {len(ciphertext_full)} characters")
         # Log first and last 50 chars to verify it's complete
         if len(ciphertext_full) > 100:
             logger.info(f"Ciphertext preview: {ciphertext_full[:50]}...{ciphertext_full[-50:]}")
+            logger.info(f"Ciphertext ends with: ...{ciphertext_full[-10:]}")
         else:
             logger.info(f"Ciphertext: {ciphertext_full}")
+    else:
+        logger.warning("Ciphertext not found in payload_data!")
+        
+    # Double-check: if raw_body exists, verify ciphertext length matches
+    if raw_body and 'ciphertext' in raw_body:
+        # Extract ciphertext from raw_body to compare lengths
+        try:
+            raw_payload_check = json.loads(raw_body)
+            raw_ciphertext = raw_payload_check.get('ciphertext', '')
+            if raw_ciphertext and len(raw_ciphertext) != len(ciphertext_full):
+                logger.warning(f"CIPHERTEXT LENGTH MISMATCH! Parsed: {len(ciphertext_full)}, Raw: {len(raw_ciphertext)}")
+                logger.warning("Using ciphertext from raw_body instead")
+                payload_data['ciphertext'] = raw_ciphertext
+                ciphertext_full = raw_ciphertext
+        except:
+            pass
     
     # Extract headers from request
     headers = {}

@@ -13,14 +13,14 @@ django.setup()
 
 from payments.services import DecryptionService
 
-# Your payload data
-ciphertext = "8IXlQ8m+bB5ldQTXJ8FiOXZ8Nym7M2XzMpCxsp39dTQW0k5+68sUWQmRDiZCpImYpxX4P5YKXUXRnAZwLd1+Fckd4Nbc1BrXpCSxCpM238Fg9+k60VyQ7L79QWqIM9k0+VlbAMzn"
-nonce = "Bgq0rNfiE24AaxvQWBlYLlmaun0IHF3j"
-associated_data = "JOYPAY"
+# Your payload data - UPDATE THESE VALUES
+ciphertext = "aqOynDI0gLzK80cN9OCvID9lFQ08Md7HQvQMwLi6q0boWkWvTCz3MrI3x7EISAcc1fOn4guNkYurVG7td/QtijJ9JFm/DlxnfXU45hz9zPyW09zdF1TbiPzUQPFKwOwU8V7WkVFfpcfgkH5yrP9yzxHOY3FF2aBxdBElsQIbMZDEjEKXVLd9UVAHqzPRAHmDplzSEHO1jL3Ro4oydekp47Y/X0ftsD6sRDuXS3mVwo2t0JEsKg1+OrUrGFg0P47fYujqNmaV+0EPB6nrs5KwlbGzYR34m/keLiY6NP2isC0g3xdDkHRdgOZ5YLzbVQKhWxaxtd6TqGvHW0rx7caDAJzD1VdO3eBDy9ldl1DEe3e2lr9NB+H1fgvipeuPdTKJM8sCN/caZmNcEFWePoOkecSmYkva72XkCQMJP9fdJpY7AvAhS+GSuBagGHMjoRKsaBnf0SbZjH0ag8KzYavb5Py+/CU3EZ1CZu1FfoukIHWvEaLL585xQHgSScdq9RhE73FltIWo9z/q44FQj3DTitAnMe6Ce9K9rYL4q7MXPi6IVFbZtzmdSIUyYdsk4JIo30FeNvhRzVjvmet9IVQWYhUCJCbqnQ=="
+nonce = "YOUR_NONCE_HERE"  # Replace with the nonce from your payload
+associated_data = "JOYPAY"  # Usually "JOYPAY" based on API docs
 
 # You need to provide your App Secret Key here
 # It should be 32 bytes (can be base64 encoded or raw)
-ENCRYPTION_KEY = "YOUR_APP_SECRET_KEY_HERE"  # Replace with actual key
+ENCRYPTION_KEY = "YOUR_APP_SECRET_KEY_HERE"  # Replace with actual key from H5App
 
 if __name__ == "__main__":
     print("Attempting to decrypt payload...")
