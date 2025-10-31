@@ -7,6 +7,10 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
 import logging
+import json
+import os
+from pathlib import Path
+from datetime import datetime
 
 from .models import H5App, Payment, PaymentCallbackLog
 from .serializers import (
@@ -144,8 +148,45 @@ def payment_callback(request):
     Handle SuperApp payment callback
     POST /api/payment/callback/ - Receive payment notification from SuperApp
     """
-    # For now: just log the payload and acknowledge receipt
+    # Log the payload to console
     logger.info(f"Callback payload: {request.data}")
+    
+    # Save payload to JSON file in callback-payload folder
+    try:
+        # Get base directory (project root)
+        from django.conf import settings
+        callback_dir = Path(settings.BASE_DIR) / 'callback-payload'
+        
+        # Create directory if it doesn't exist
+        callback_dir.mkdir(exist_ok=True)
+        
+        # Generate timestamp for filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # Include milliseconds
+        filename = f"callback_{timestamp}.json"
+        filepath = callback_dir / filename
+        
+        # Convert request.data to dict if needed (it might be a QueryDict)
+        if hasattr(request.data, 'dict'):
+            payload_data = request.data.dict()
+        else:
+            payload_data = dict(request.data)
+        
+        # Add metadata to the saved payload
+        saved_data = {
+            "timestamp": datetime.now().isoformat(),
+            "received_at": timezone.now().isoformat(),
+            "payload": payload_data
+        }
+        
+        # Save as JSON file
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(saved_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"Callback payload saved to: {filepath}")
+        
+    except Exception as e:
+        logger.error(f"Error saving callback payload to file: {str(e)}")
+    
     return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
 
 
