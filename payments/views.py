@@ -181,19 +181,40 @@ def payment_callback(request):
     
     # Extract headers from request
     headers = {}
-    # Django request.headers (available in Django 2.2+)
-    if hasattr(request, 'headers'):
-        for key, value in request.headers.items():
+    # Get the underlying Django HttpRequest
+    django_request = request._request if hasattr(request, '_request') else request
+    
+    # Method 1: Try Django request.headers (available in Django 2.2+)
+    if hasattr(django_request, 'headers'):
+        for key, value in django_request.headers.items():
             headers[key] = value
+    
+    # Method 2: Extract from request.META (for DRF and older Django)
+    # DRF request.META contains HTTP_ prefixed headers
+    if hasattr(request, 'META'):
+        meta = request.META
+    elif hasattr(django_request, 'META'):
+        meta = django_request.META
     else:
-        # Fallback: extract from request.META (HTTP_ prefixed keys)
-        for key, value in request.META.items():
-            if key.startswith('HTTP_'):
-                # Convert HTTP_HEADER_NAME to Header-Name format
-                header_name = key[5:].replace('_', '-')
+        meta = {}
+    
+    for key, value in meta.items():
+        if key.startswith('HTTP_'):
+            # Convert HTTP_HEADER_NAME to Header-Name format
+            # HTTP_AUTHORIZATION -> Authorization
+            header_name = key[5:].replace('_', '-').title()
+            # Preserve original if we haven't added it via request.headers
+            if header_name not in headers:
                 headers[header_name] = value
-            elif key in ['CONTENT_TYPE', 'CONTENT_LENGTH']:
-                headers[key.replace('_', '-')] = value
+        elif key in ['CONTENT_TYPE', 'CONTENT_LENGTH']:
+            # Content-Type and Content-Length are special
+            header_name = key.replace('_', '-').title()
+            if header_name not in headers:
+                headers[header_name] = value
+    
+    # Ensure we capture Content-Type if available
+    if not headers.get('Content-Type') and meta.get('CONTENT_TYPE'):
+        headers['Content-Type'] = meta.get('CONTENT_TYPE')
     
     # Log the payload and headers to console (ciphertext may be truncated in logs but saved fully)
     logger.info(f"Callback headers: {headers}")
