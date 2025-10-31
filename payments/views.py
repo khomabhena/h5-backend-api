@@ -148,45 +148,216 @@ def payment_callback(request):
     Handle SuperApp payment callback
     POST /api/payment/callback/ - Receive payment notification from SuperApp
     """
-    # Log the payload to console
-    logger.info(f"Callback payload: {request.data}")
+    # Capture raw request body first to ensure nothing is lost
+    # DRF wraps the request, so we need to access the underlying Django request
+    raw_body = None
+    try:
+        # Access the underlying Django HttpRequest
+        django_request = request._request if hasattr(request, '_request') else request
+        if hasattr(django_request, 'body'):
+            body_bytes = django_request.body
+            if isinstance(body_bytes, bytes):
+                raw_body = body_bytes.decode('utf-8')
+            else:
+                raw_body = body_bytes
+    except Exception as e:
+        logger.warning(f"Could not capture raw body: {str(e)}")
+    
+    # Convert request.data to dict if needed
+    if hasattr(request.data, 'dict'):
+        payload_data = request.data.dict()
+    else:
+        payload_data = dict(request.data)
+    
+    # Ensure ciphertext is fully captured (may be very long)
+    ciphertext_full = payload_data.get('ciphertext', '')
+    if ciphertext_full:
+        logger.info(f"Ciphertext length: {len(ciphertext_full)} characters")
+        # Log first and last 50 chars to verify it's complete
+        if len(ciphertext_full) > 100:
+            logger.info(f"Ciphertext preview: {ciphertext_full[:50]}...{ciphertext_full[-50:]}")
+        else:
+            logger.info(f"Ciphertext: {ciphertext_full}")
+    
+    # Extract headers from request
+    headers = {}
+    # Django request.headers (available in Django 2.2+)
+    if hasattr(request, 'headers'):
+        for key, value in request.headers.items():
+            headers[key] = value
+    else:
+        # Fallback: extract from request.META (HTTP_ prefixed keys)
+        for key, value in request.META.items():
+            if key.startswith('HTTP_'):
+                # Convert HTTP_HEADER_NAME to Header-Name format
+                header_name = key[5:].replace('_', '-')
+                headers[header_name] = value
+            elif key in ['CONTENT_TYPE', 'CONTENT_LENGTH']:
+                headers[key.replace('_', '-')] = value
+    
+    # Log the payload and headers to console (ciphertext may be truncated in logs but saved fully)
+    logger.info(f"Callback headers: {headers}")
+    logger.info(f"Callback payload keys: {list(payload_data.keys())}")
+    if 'ciphertext' in payload_data:
+        logger.info(f"Ciphertext present in payload: {len(payload_data.get('ciphertext', ''))} chars")
+    
+    # Initialize variables for file saving
+    filepath = None
+    saved_data = {
+        "timestamp": datetime.now().isoformat(),
+        "received_at": timezone.now().isoformat(),
+        "headers": headers,
+        "payload": payload_data,
+        "raw_body": raw_body  # Include raw body as backup
+    }
     
     # Save payload to JSON file in callback-payload folder
     try:
-        # Get base directory (project root)
         from django.conf import settings
         callback_dir = Path(settings.BASE_DIR) / 'callback-payload'
-        
-        # Create directory if it doesn't exist
         callback_dir.mkdir(exist_ok=True)
         
-        # Generate timestamp for filename
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # Include milliseconds
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
         filename = f"callback_{timestamp}.json"
         filepath = callback_dir / filename
         
-        # Convert request.data to dict if needed (it might be a QueryDict)
-        if hasattr(request.data, 'dict'):
-            payload_data = request.data.dict()
-        else:
-            payload_data = dict(request.data)
-        
-        # Add metadata to the saved payload
-        saved_data = {
-            "timestamp": datetime.now().isoformat(),
-            "received_at": timezone.now().isoformat(),
-            "payload": payload_data
-        }
-        
-        # Save as JSON file
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(saved_data, f, indent=2, ensure_ascii=False)
         
         logger.info(f"Callback payload saved to: {filepath}")
-        
     except Exception as e:
         logger.error(f"Error saving callback payload to file: {str(e)}")
     
+    # Extract callback parameters
+    serial_no = payload_data.get('serialNo')
+    prepay_id = payload_data.get('prepayId')
+    algorithm = payload_data.get('algorithm', 'AEAD_AES_256_GCM')
+    ciphertext = payload_data.get('ciphertext')
+    nonce = payload_data.get('nonce')
+    associated_data = payload_data.get('associatedData', 'JOYPAY')
+    
+    # Validate required fields
+    if not serial_no or not ciphertext or not nonce:
+        logger.error(f"Missing required fields. serialNo: {serial_no}, ciphertext: {bool(ciphertext)}, nonce: {bool(nonce)}")
+        return Response(
+            {"code": "ERROR", "message": "Missing required fields"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Find the H5App by serialNo (which matches app_key)
+    try:
+        h5_app = H5App.objects.get(app_key=serial_no)
+        if not h5_app.is_active:
+            logger.warning(f"H5App {serial_no} is not active")
+            return Response(
+                {"code": "ERROR", "message": "App is not active"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    except H5App.DoesNotExist:
+        logger.error(f"H5App not found for serialNo: {serial_no}")
+        return Response(
+            {"code": "ERROR", "message": "App not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Decrypt the ciphertext
+    try:
+        decrypted_data = DecryptionService.decrypt_ciphertext(
+            ciphertext=ciphertext,
+            encryption_key=h5_app.encryption_key,
+            algorithm=algorithm,
+            nonce=nonce,
+            associated_data=associated_data
+        )
+        logger.info(f"Successfully decrypted data for prepayId: {prepay_id}")
+        
+        # Save decrypted data to the callback file as well
+        if filepath:
+            try:
+                saved_data['decrypted_data'] = decrypted_data
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    json.dump(saved_data, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                logger.warning(f"Could not update callback file with decrypted data: {str(e)}")
+            
+    except Exception as e:
+        logger.error(f"Failed to decrypt ciphertext: {str(e)}")
+        return Response(
+            {"code": "ERROR", "message": "Decryption failed"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Process the decrypted payment data
+    # Map decrypted fields: outBizId -> payment_ref, prepayId -> prepayId, etc.
+    out_biz_id = decrypted_data.get('outBizId')  # Merchant order number (our payment_ref)
+    decrypted_prepay_id = decrypted_data.get('prepayId')
+    trade_status = decrypted_data.get('status')  # Should be "SUCCESS"
+    order_amount = decrypted_data.get('orderAmount')  # In smallest currency unit (cents)
+    paid_amount = decrypted_data.get('paidAmount')
+    currency_code = decrypted_data.get('currency', 'USD')
+    finish_time = decrypted_data.get('finishTime')
+    
+    # Find or create payment record
+    payment_ref = out_biz_id or prepay_id or decrypted_prepay_id
+    
+    try:
+        # Try to find existing payment by payment_ref
+        try:
+            payment = Payment.objects.get(payment_ref=payment_ref, h5_app=h5_app)
+        except Payment.DoesNotExist:
+            # Create new payment if not found
+            # Convert amount from smallest unit (cents) to decimal
+            amount = float(order_amount or paid_amount or 0) / 100 if (order_amount or paid_amount) else 0
+            
+            payment = Payment.objects.create(
+                h5_app=h5_app,
+                payment_ref=payment_ref,
+                amount=amount,
+                currency=currency_code,
+                status='pending'
+            )
+            logger.info(f"Created new payment record: {payment_ref}")
+        
+        # Update payment with decrypted data
+        payment.ciphertext = ciphertext
+        payment.decrypted_data = decrypted_data
+        payment.callback_received_at = timezone.now()
+        
+        # Update amount if provided
+        if order_amount or paid_amount:
+            amount = float(order_amount or paid_amount) / 100
+            payment.amount = amount
+        
+        # Update currency if provided
+        if currency_code:
+            payment.currency = currency_code
+        
+        # Update status based on trade_status
+        if trade_status == 'SUCCESS':
+            payment.status = 'completed'
+        elif trade_status in ['FAILED', 'FAIL']:
+            payment.status = 'failed'
+        elif trade_status in ['PENDING', 'PROCESSING']:
+            payment.status = 'processing'
+        
+        # Store additional metadata
+        if 'callbackInfo' in decrypted_data:
+            payment.order_id = decrypted_data.get('callbackInfo')
+        if 'description' in decrypted_data:
+            # Could store in a notes field if we add one
+            pass
+        
+        payment.save()
+        logger.info(f"Updated payment {payment_ref} with status: {payment.status}")
+        
+    except Exception as e:
+        logger.error(f"Error processing payment data: {str(e)}")
+        return Response(
+            {"code": "ERROR", "message": "Failed to process payment"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Return success response
     return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
 
 
