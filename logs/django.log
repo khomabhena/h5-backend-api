@@ -308,3 +308,9 @@ INFO 2025-10-30 13:52:45,456 autoreload 25756 28728 C:\Users\KholwaniMabhena\wor
 INFO 2025-10-30 13:52:46,720 autoreload 8500 20292 Watching for file changes with StatReloader
 INFO 2025-10-30 13:55:57,718 views 8500 28676 Callback payload: {}
 INFO 2025-10-30 13:55:57,722 basehttp 8500 28676 "POST /api/payment/callback/ HTTP/1.1" 200 18
+INFO 2025-10-31 09:34:53,843 autoreload 8500 20292 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-31 09:34:57,853 autoreload 5832 33040 Watching for file changes with StatReloader
+INFO 2025-10-31 09:35:03,143 autoreload 5832 33040 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-31 09:35:04,631 autoreload 31620 31368 Watching for file changes with StatReloader
+INFO 2025-10-31 09:35:24,500 autoreload 31620 31368 C:\Users\KholwaniMabhena\work\h5-backend-api\payments\views.py changed, reloading.
+INFO 2025-10-31 09:35:25,976 autoreload 23568 33320 Watching for file changes with StatReloader
