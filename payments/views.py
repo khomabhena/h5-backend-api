@@ -37,6 +37,33 @@ class PaymentCallbackView(APIView):
     def post(self, request):
         data = request.data
         new_payload_log.info(f"Received payload: {data}")
+        
+        # Log payload to file in new payload logs folder
+        try:
+            from django.conf import settings
+            payload_logs_dir = Path(settings.BASE_DIR) / 'new-payload-logs'
+            payload_logs_dir.mkdir(exist_ok=True)
+            
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"payload_{timestamp}.txt"
+            filepath = payload_logs_dir / filename
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(f"# Payload Log\n")
+                f.write(f"# Timestamp: {datetime.now().isoformat()}\n")
+                f.write(f"# Received At: {timezone.now().isoformat()}\n")
+                f.write(f"# \n")
+                f.write(f"# Payload Data (Raw):\n")
+                f.write(f"{data}\n")
+                f.write(f"# \n")
+                f.write(f"# Payload Data (Formatted JSON):\n")
+                f.write(f"{json.dumps(data, indent=2, default=str)}\n")
+            
+            new_payload_log.info(f"Payload saved to: {filepath}")
+        except Exception as e:
+            new_payload_log.error(f"Error saving payload to file: {str(e)}")
+            new_payload_log.error(traceback.format_exc())
+        
         # Process the callback data here
         # You can add your callback processing logic here
         return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)

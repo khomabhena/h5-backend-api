@@ -24,6 +24,9 @@ callback-payload/
 # Ciphertext logs (keep directory, ignore log files)
 ciphertext-logs/*.txt
 
+# New payload logs (keep directory, ignore log files)
+new-payload-logs/*.txt
+
 # IDE
 .vscode/
 .idea/
