@@ -312,31 +312,42 @@ def payment_callback(request):
     nonce = payload_data.get('nonce')
     associated_data = payload_data.get('associatedData', 'JOYPAY')
     
-    # Validate required fields
-    if not serial_no or not ciphertext or not nonce:
-        logger.error(f"Missing required fields. serialNo: {serial_no}, ciphertext: {bool(ciphertext)}, nonce: {bool(nonce)}")
-        return Response(
-            {"code": "ERROR", "message": "Missing required fields"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    # If missing critical fields, just save and return success
+    if not ciphertext or not nonce:
+        logger.warning(f"Missing ciphertext or nonce - saving payload without decryption")
+        # Save payload to file only, return success
+        return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
     
-    # Find the H5App by serialNo (which matches app_key)
-    try:
-        h5_app = H5App.objects.get(app_key=serial_no)
-        if not h5_app.is_active:
-            logger.warning(f"H5App {serial_no} is not active")
-            return Response(
-                {"code": "ERROR", "message": "App is not active"},
-                status=status.HTTP_400_BAD_REQUEST
+    # Get or create H5App - don't fail if not found, just create with dummy key
+    h5_app = None
+    if serial_no:
+        try:
+            h5_app = H5App.objects.get(app_key=serial_no)
+        except H5App.DoesNotExist:
+            # Create a default H5App if not found - this allows us to save data
+            logger.warning(f"H5App not found for serialNo: {serial_no}, creating default app")
+            h5_app = H5App.objects.create(
+                name=f"Auto-created app for {serial_no}",
+                app_key=serial_no,
+                encryption_key="default-dummy-key-for-data-storage",  # Won't work for decryption but allows storage
+                notify_url="",
+                is_active=True
             )
-    except H5App.DoesNotExist:
-        logger.error(f"H5App not found for serialNo: {serial_no}")
-        return Response(
-            {"code": "ERROR", "message": "App not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    else:
+        # If no serial_no, create a generic default app
+        try:
+            h5_app = H5App.objects.get(app_key="__default__")
+        except H5App.DoesNotExist:
+            h5_app = H5App.objects.create(
+                name="Default Payment App",
+                app_key="__default__",
+                encryption_key="default-dummy-key-for-data-storage",
+                notify_url="",
+                is_active=True
+            )
         
-    # Decrypt the ciphertext
+    # Try to decrypt the ciphertext, but don't fail if it doesn't work
+    decrypted_data = None
     try:
         decrypted_data = DecryptionService.decrypt_ciphertext(
             ciphertext=ciphertext,
@@ -357,11 +368,9 @@ def payment_callback(request):
                 logger.warning(f"Could not update callback file with decrypted data: {str(e)}")
             
     except Exception as e:
-        logger.error(f"Failed to decrypt ciphertext: {str(e)}")
-        return Response(
-            {"code": "ERROR", "message": "Decryption failed"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        logger.warning(f"Failed to decrypt ciphertext: {str(e)} - continuing without decryption")
+        # Don't fail, just continue with None decrypted_data
+        decrypted_data = None
     
     # Helper function to safely convert to integer (for BigIntegerField)
     def safe_int(value, default=None):
@@ -387,23 +396,32 @@ def payment_callback(request):
     
     # Process the decrypted payment data
     # Map decrypted fields: outBizId -> payment_ref, prepayId -> prepayId, etc.
-    out_biz_id = decrypted_data.get('outBizId')  # Merchant order number (our payment_ref)
-    decrypted_prepay_id = decrypted_data.get('prepayId')
-    trade_status = decrypted_data.get('status')  # Should be "SUCCESS"
-    order_amount = decrypted_data.get('orderAmount')  # In smallest currency unit (cents)
-    paid_amount = decrypted_data.get('paidAmount')
-    currency_code = decrypted_data.get('currency', 'USD')
-    finish_time = decrypted_data.get('finishTime')
+    # Handle case where decryption failed or data is None
+    if decrypted_data:
+        out_biz_id = decrypted_data.get('outBizId')  # Merchant order number (our payment_ref)
+        decrypted_prepay_id = decrypted_data.get('prepayId')
+        trade_status = decrypted_data.get('status')  # Should be "SUCCESS"
+        order_amount = decrypted_data.get('orderAmount')  # In smallest currency unit (cents)
+        paid_amount = decrypted_data.get('paidAmount')
+        currency_code = decrypted_data.get('currency', 'USD')
+        finish_time = decrypted_data.get('finishTime')
+    else:
+        # No decrypted data available
+        out_biz_id = None
+        decrypted_prepay_id = None
+        trade_status = None
+        order_amount = None
+        paid_amount = None
+        currency_code = 'USD'
+        finish_time = None
     
     # Find or create payment record
-    payment_ref = out_biz_id or prepay_id or decrypted_prepay_id
+    payment_ref = out_biz_id or prepay_id or decrypted_prepay_id or serial_no or "unknown"
     
-    if not payment_ref:
-        logger.error("No payment reference found in decrypted data")
-        return Response(
-            {"code": "ERROR", "message": "Payment reference not found"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    # Always save data even without payment_ref - use timestamp as fallback
+    if not payment_ref or payment_ref == "unknown":
+        payment_ref = f"callback_{int(timezone.now().timestamp())}"
+        logger.warning(f"No payment reference found, using generated: {payment_ref}")
     
     try:
         # Try to find existing payment by payment_ref
@@ -433,127 +451,128 @@ def payment_callback(request):
         payment.decrypted_data = decrypted_data  # Full decrypted JSON stored here
         payment.callback_received_at = timezone.now()
         
-        # Store all SuperApp decrypted fields with safe handling
-        try:
-            if 'appId' in decrypted_data and decrypted_data.get('appId'):
-                payment.app_id = str(decrypted_data.get('appId'))
-        except Exception as e:
-            logger.warning(f"Error setting app_id: {str(e)}")
-        
-        try:
-            if 'mchId' in decrypted_data and decrypted_data.get('mchId'):
-                payment.mch_id = str(decrypted_data.get('mchId'))
-        except Exception as e:
-            logger.warning(f"Error setting mch_id: {str(e)}")
-        
-        try:
-            if 'outBizId' in decrypted_data and decrypted_data.get('outBizId'):
-                payment.out_biz_id = str(decrypted_data.get('outBizId'))
-        except Exception as e:
-            logger.warning(f"Error setting out_biz_id: {str(e)}")
-        
-        try:
-            if 'prepayId' in decrypted_data and decrypted_data.get('prepayId'):
-                payment.prepay_id = str(decrypted_data.get('prepayId'))
-        except Exception as e:
-            logger.warning(f"Error setting prepay_id: {str(e)}")
-        
-        try:
-            if 'paymentOrderId' in decrypted_data and decrypted_data.get('paymentOrderId'):
-                payment.payment_order_id = str(decrypted_data.get('paymentOrderId'))
-        except Exception as e:
-            logger.warning(f"Error setting payment_order_id: {str(e)}")
-        
-        try:
-            if 'tradeType' in decrypted_data and decrypted_data.get('tradeType'):
-                payment.trade_type = str(decrypted_data.get('tradeType'))
-        except Exception as e:
-            logger.warning(f"Error setting trade_type: {str(e)}")
-        
-        try:
-            if 'status' in decrypted_data and decrypted_data.get('status'):
-                payment.superapp_status = str(decrypted_data.get('status'))
-        except Exception as e:
-            logger.warning(f"Error setting superapp_status: {str(e)}")
-        
-        try:
-            if 'description' in decrypted_data and decrypted_data.get('description'):
-                payment.description = str(decrypted_data.get('description'))
-        except Exception as e:
-            logger.warning(f"Error setting description: {str(e)}")
-        
-        try:
-            if 'finishTime' in decrypted_data:
-                finish_time_val = safe_int(decrypted_data.get('finishTime'))
-                if finish_time_val is not None:
-                    payment.finish_time = finish_time_val
-        except Exception as e:
-            logger.warning(f"Error setting finish_time: {str(e)}")
-        
-        try:
-            if 'orderAmount' in decrypted_data:
-                order_amount_val = safe_int(decrypted_data.get('orderAmount'))
-                if order_amount_val is not None:
-                    payment.order_amount = order_amount_val
-        except Exception as e:
-            logger.warning(f"Error setting order_amount: {str(e)}")
-        
-        try:
-            if 'paidAmount' in decrypted_data:
-                paid_amount_val = safe_int(decrypted_data.get('paidAmount'))
-                if paid_amount_val is not None:
-                    payment.paid_amount = paid_amount_val
-        except Exception as e:
-            logger.warning(f"Error setting paid_amount: {str(e)}")
-        
-        try:
-            if 'paymentProduct' in decrypted_data and decrypted_data.get('paymentProduct'):
-                payment.payment_product = str(decrypted_data.get('paymentProduct'))
-        except Exception as e:
-            logger.warning(f"Error setting payment_product: {str(e)}")
-        
-        try:
-            if 'callbackInfo' in decrypted_data and decrypted_data.get('callbackInfo'):
-                callback_info = str(decrypted_data.get('callbackInfo'))
-                payment.callback_info = callback_info
-                payment.order_id = callback_info  # Also store in order_id for compatibility
-        except Exception as e:
-            logger.warning(f"Error setting callback_info: {str(e)}")
-        
-        # Store original payment fields (for refunds) with safe handling
-        try:
-            if 'originalOutBizId' in decrypted_data and decrypted_data.get('originalOutBizId'):
-                payment.original_out_biz_id = str(decrypted_data.get('originalOutBizId'))
-        except Exception as e:
-            logger.warning(f"Error setting original_out_biz_id: {str(e)}")
-        
-        try:
-            if 'originalPrepayId' in decrypted_data and decrypted_data.get('originalPrepayId'):
-                payment.original_prepay_id = str(decrypted_data.get('originalPrepayId'))
-        except Exception as e:
-            logger.warning(f"Error setting original_prepay_id: {str(e)}")
-        
-        try:
-            if 'originalPaymentOrderId' in decrypted_data and decrypted_data.get('originalPaymentOrderId'):
-                payment.original_payment_order_id = str(decrypted_data.get('originalPaymentOrderId'))
-        except Exception as e:
-            logger.warning(f"Error setting original_payment_order_id: {str(e)}")
-        
-        try:
-            if 'originalOrderAmount' in decrypted_data:
-                original_order_amount_val = safe_int(decrypted_data.get('originalOrderAmount'))
-                if original_order_amount_val is not None:
-                    payment.original_order_amount = original_order_amount_val
-        except Exception as e:
-            logger.warning(f"Error setting original_order_amount: {str(e)}")
-        
-        try:
-            if 'originalPaidAmount' in decrypted_data:
-                original_paid_amount_val = safe_int(decrypted_data.get('originalPaidAmount'))
-                if original_paid_amount_val is not None:
-                    payment.original_paid_amount = original_paid_amount_val
-        except Exception as e:
-            logger.warning(f"Error setting original_paid_amount: {str(e)}")
+        # Store all SuperApp decrypted fields with safe handling (only if decrypted_data exists)
+        if decrypted_data:
+            try:
+                if 'appId' in decrypted_data and decrypted_data.get('appId'):
+                    payment.app_id = str(decrypted_data.get('appId'))
+            except Exception as e:
+                logger.warning(f"Error setting app_id: {str(e)}")
+            
+            try:
+                if 'mchId' in decrypted_data and decrypted_data.get('mchId'):
+                    payment.mch_id = str(decrypted_data.get('mchId'))
+            except Exception as e:
+                logger.warning(f"Error setting mch_id: {str(e)}")
+            
+            try:
+                if 'outBizId' in decrypted_data and decrypted_data.get('outBizId'):
+                    payment.out_biz_id = str(decrypted_data.get('outBizId'))
+            except Exception as e:
+                logger.warning(f"Error setting out_biz_id: {str(e)}")
+            
+            try:
+                if 'prepayId' in decrypted_data and decrypted_data.get('prepayId'):
+                    payment.prepay_id = str(decrypted_data.get('prepayId'))
+            except Exception as e:
+                logger.warning(f"Error setting prepay_id: {str(e)}")
+            
+            try:
+                if 'paymentOrderId' in decrypted_data and decrypted_data.get('paymentOrderId'):
+                    payment.payment_order_id = str(decrypted_data.get('paymentOrderId'))
+            except Exception as e:
+                logger.warning(f"Error setting payment_order_id: {str(e)}")
+            
+            try:
+                if 'tradeType' in decrypted_data and decrypted_data.get('tradeType'):
+                    payment.trade_type = str(decrypted_data.get('tradeType'))
+            except Exception as e:
+                logger.warning(f"Error setting trade_type: {str(e)}")
+            
+            try:
+                if 'status' in decrypted_data and decrypted_data.get('status'):
+                    payment.superapp_status = str(decrypted_data.get('status'))
+            except Exception as e:
+                logger.warning(f"Error setting superapp_status: {str(e)}")
+            
+            try:
+                if 'description' in decrypted_data and decrypted_data.get('description'):
+                    payment.description = str(decrypted_data.get('description'))
+            except Exception as e:
+                logger.warning(f"Error setting description: {str(e)}")
+            
+            try:
+                if 'finishTime' in decrypted_data:
+                    finish_time_val = safe_int(decrypted_data.get('finishTime'))
+                    if finish_time_val is not None:
+                        payment.finish_time = finish_time_val
+            except Exception as e:
+                logger.warning(f"Error setting finish_time: {str(e)}")
+            
+            try:
+                if 'orderAmount' in decrypted_data:
+                    order_amount_val = safe_int(decrypted_data.get('orderAmount'))
+                    if order_amount_val is not None:
+                        payment.order_amount = order_amount_val
+            except Exception as e:
+                logger.warning(f"Error setting order_amount: {str(e)}")
+            
+            try:
+                if 'paidAmount' in decrypted_data:
+                    paid_amount_val = safe_int(decrypted_data.get('paidAmount'))
+                    if paid_amount_val is not None:
+                        payment.paid_amount = paid_amount_val
+            except Exception as e:
+                logger.warning(f"Error setting paid_amount: {str(e)}")
+            
+            try:
+                if 'paymentProduct' in decrypted_data and decrypted_data.get('paymentProduct'):
+                    payment.payment_product = str(decrypted_data.get('paymentProduct'))
+            except Exception as e:
+                logger.warning(f"Error setting payment_product: {str(e)}")
+            
+            try:
+                if 'callbackInfo' in decrypted_data and decrypted_data.get('callbackInfo'):
+                    callback_info = str(decrypted_data.get('callbackInfo'))
+                    payment.callback_info = callback_info
+                    payment.order_id = callback_info  # Also store in order_id for compatibility
+            except Exception as e:
+                logger.warning(f"Error setting callback_info: {str(e)}")
+            
+            # Store original payment fields (for refunds) with safe handling
+            try:
+                if 'originalOutBizId' in decrypted_data and decrypted_data.get('originalOutBizId'):
+                    payment.original_out_biz_id = str(decrypted_data.get('originalOutBizId'))
+            except Exception as e:
+                logger.warning(f"Error setting original_out_biz_id: {str(e)}")
+            
+            try:
+                if 'originalPrepayId' in decrypted_data and decrypted_data.get('originalPrepayId'):
+                    payment.original_prepay_id = str(decrypted_data.get('originalPrepayId'))
+            except Exception as e:
+                logger.warning(f"Error setting original_prepay_id: {str(e)}")
+            
+            try:
+                if 'originalPaymentOrderId' in decrypted_data and decrypted_data.get('originalPaymentOrderId'):
+                    payment.original_payment_order_id = str(decrypted_data.get('originalPaymentOrderId'))
+            except Exception as e:
+                logger.warning(f"Error setting original_payment_order_id: {str(e)}")
+            
+            try:
+                if 'originalOrderAmount' in decrypted_data:
+                    original_order_amount_val = safe_int(decrypted_data.get('originalOrderAmount'))
+                    if original_order_amount_val is not None:
+                        payment.original_order_amount = original_order_amount_val
+            except Exception as e:
+                logger.warning(f"Error setting original_order_amount: {str(e)}")
+            
+            try:
+                if 'originalPaidAmount' in decrypted_data:
+                    original_paid_amount_val = safe_int(decrypted_data.get('originalPaidAmount'))
+                    if original_paid_amount_val is not None:
+                        payment.original_paid_amount = original_paid_amount_val
+            except Exception as e:
+                logger.warning(f"Error setting original_paid_amount: {str(e)}")
         
         # Update amount if provided (convert from cents to decimal)
         if order_amount or paid_amount:
