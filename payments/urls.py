@@ -19,6 +19,6 @@ urlpatterns = [
     path('payments/callback-logs/', views.PaymentCallbackLogsView.as_view(), name='payment-callback-logs'),
     
     # SuperApp callback endpoint
-    path('payment/callback/', views.payment_callback, name='payment-callback'),
+    path('payment/callback/', views.PaymentCallbackView.as_view(), name='payment-callback'),
 ]
 

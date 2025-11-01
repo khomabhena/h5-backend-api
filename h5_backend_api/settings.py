@@ -232,5 +232,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
+        'new_payload_log': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }

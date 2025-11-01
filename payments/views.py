@@ -21,19 +21,26 @@ from .serializers import (
 from .services import DecryptionService
 from .decryption_service_docs import DocumentationDecryptionService
 from .decryption_service_java import JavaDecryptionService
-from .callback_helpers import (
-    extract_raw_body,
-    extract_request_headers,
-    save_callback_payload,
-    log_ciphertext_to_file,
-    get_or_create_h5_app,
-    decrypt_ciphertext_with_fallback,
-    process_and_save_payment,
-)
 
 logger = logging.getLogger('payments')
 db_error_logger = logging.getLogger('db_errors')
+new_payload_log = logging.getLogger('new_payload_log')
 
+
+class PaymentCallbackView(APIView):
+    """
+    Handle SuperApp payment callback
+    POST /api/payment/callback/ - Receive payment notification from SuperApp
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        data = request.data
+        new_payload_log.info(f"Received payload: {data}")
+        # Process the callback data here
+        # You can add your callback processing logic here
+        return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
+        
 
 class H5AppListCreateView(generics.ListCreateAPIView):
     """
@@ -153,58 +160,6 @@ class PaymentRetrieveView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]  # Adjust permissions as needed
     lookup_field = 'id'
 
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def payment_callback(request):
-    """
-    Handle SuperApp payment callback
-    POST /api/payment/callback/ - Receive payment notification from SuperApp
-    """
-    # Extract raw body for logging/saving purposes only
-    raw_body = extract_raw_body(request)
-    
-    # Use DRF's already-parsed request.data directly - it's dict-like for JSON payloads
-    # No need to convert - request.data already supports .get() and dict operations
-    payload_data = request.data
-    
-    # Get ciphertext directly from request.data
-    ciphertext = payload_data.get('ciphertext', '')
-    if ciphertext:
-        logger.info(f"Ciphertext length: {len(ciphertext)} characters")
-    
-    # Extract headers and save payload
-    headers = extract_request_headers(request)
-    filepath, saved_data = save_callback_payload(payload_data, headers, raw_body)
-    
-    # Extract callback parameters
-    serial_no = payload_data.get('serialNo')
-    prepay_id = payload_data.get('prepayId')
-    algorithm = payload_data.get('algorithm', 'AEAD_AES_256_GCM')
-    nonce = payload_data.get('nonce') or "Ft5MhFp5iMJMzGLaCWiTV5UxpK3gKGIz"
-    associated_data = payload_data.get('associatedData') or "JOYPAY"
-    
-    # Log ciphertext to separate folder
-    log_ciphertext_to_file(ciphertext, prepay_id, serial_no, algorithm, nonce, associated_data)
-    
-    # If missing critical fields, return success
-    if not ciphertext or not nonce:
-        logger.warning(f"Missing ciphertext or nonce - saving payload without decryption")
-        return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
-    
-    # Get or create H5App
-    h5_app = get_or_create_h5_app(serial_no)
-    
-    # Decrypt ciphertext with fallback methods
-    decrypted_data = decrypt_ciphertext_with_fallback(
-        ciphertext, h5_app.encryption_key, algorithm, nonce, associated_data, filepath, saved_data
-    )
-    
-    # Process and save payment
-    process_and_save_payment(h5_app, ciphertext, decrypted_data, prepay_id, serial_no, db_error_logger)
-    
-    # Always return success response regardless of errors
-    return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
 
 
 class PaymentStatsView(APIView):
