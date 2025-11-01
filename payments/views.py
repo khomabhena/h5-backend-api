@@ -318,18 +318,21 @@ def payment_callback(request):
         # Save payload to file only, return success
         return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
     
-    # Get or create H5App - don't fail if not found, just create with dummy key
+    # Get or create H5App - don't fail if not found, just create with working key
     h5_app = None
+    # Hardcoded encryption key from decrypt.js for testing
+    WORKING_ENCRYPTION_KEY = "4tmvsbJaVBQPFxsum+c3lA=="
+    
     if serial_no:
         try:
             h5_app = H5App.objects.get(app_key=serial_no)
         except H5App.DoesNotExist:
             # Create a default H5App if not found - this allows us to save data
-            logger.warning(f"H5App not found for serialNo: {serial_no}, creating default app")
+            logger.warning(f"H5App not found for serialNo: {serial_no}, creating default app with working key")
             h5_app = H5App.objects.create(
                 name=f"Auto-created app for {serial_no}",
                 app_key=serial_no,
-                encryption_key="default-dummy-key-for-data-storage",  # Won't work for decryption but allows storage
+                encryption_key=WORKING_ENCRYPTION_KEY,  # Using hardcoded working key from decrypt.js
                 notify_url="",
                 is_active=True
             )
@@ -341,7 +344,7 @@ def payment_callback(request):
             h5_app = H5App.objects.create(
                 name="Default Payment App",
                 app_key="__default__",
-                encryption_key="default-dummy-key-for-data-storage",
+                encryption_key=WORKING_ENCRYPTION_KEY,
                 notify_url="",
                 is_active=True
             )
