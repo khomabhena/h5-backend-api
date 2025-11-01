@@ -21,6 +21,9 @@ db.sqlite3-journal
 # Callback payloads
 callback-payload/
 
+# Ciphertext logs (keep directory, ignore log files)
+ciphertext-logs/*.txt
+
 # IDE
 .vscode/
 .idea/

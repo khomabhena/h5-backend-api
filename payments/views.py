@@ -316,6 +316,40 @@ def payment_callback(request):
     nonce = payload_data.get('nonce') or "Ft5MhFp5iMJMzGLaCWiTV5UxpK3gKGIz"  # Fallback to decrypt.js value
     associated_data = payload_data.get('associatedData') or "JOYPAY"  # Fallback to decrypt.js value
     
+    # Log ciphertext to a separate folder
+    if ciphertext:
+        try:
+            from django.conf import settings
+            ciphertext_dir = Path(settings.BASE_DIR) / 'ciphertext-logs'
+            ciphertext_dir.mkdir(exist_ok=True)
+            
+            # Create a filename with timestamp and identifiers
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            identifier = f"{prepay_id or serial_no or 'unknown'}"
+            filename = f"ciphertext_{timestamp}_{identifier}.txt"
+            ciphertext_filepath = ciphertext_dir / filename
+            
+            # Save ciphertext with metadata as a header comment
+            with open(ciphertext_filepath, 'w', encoding='utf-8') as f:
+                f.write(f"# Ciphertext Log\n")
+                f.write(f"# Timestamp: {datetime.now().isoformat()}\n")
+                f.write(f"# Received At: {timezone.now().isoformat()}\n")
+                f.write(f"# Serial No: {serial_no or 'N/A'}\n")
+                f.write(f"# Prepay ID: {prepay_id or 'N/A'}\n")
+                f.write(f"# Algorithm: {algorithm}\n")
+                f.write(f"# Nonce: {nonce or 'N/A'}\n")
+                f.write(f"# Associated Data: {associated_data or 'N/A'}\n")
+                f.write(f"# Ciphertext Length: {len(ciphertext)} characters\n")
+                f.write(f"# \n")
+                f.write(f"# Ciphertext (Base64):\n")
+                f.write(ciphertext)
+            
+            logger.info(f"Ciphertext saved to: {ciphertext_filepath} ({len(ciphertext)} chars)")
+        except Exception as e:
+            logger.error(f"Error saving ciphertext to separate folder: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+    
     # If missing critical fields, just save and return success
     if not ciphertext or not nonce:
         logger.warning(f"Missing ciphertext or nonce - saving payload without decryption")
