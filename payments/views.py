@@ -20,6 +20,7 @@ from .serializers import (
 )
 from .services import DecryptionService
 from .decryption_service_docs import DocumentationDecryptionService
+from .decryption_service_java import JavaDecryptionService
 
 logger = logging.getLogger('payments')
 db_error_logger = logging.getLogger('db_errors')
@@ -355,14 +356,14 @@ def payment_callback(request):
     # Try to decrypt the ciphertext, but don't fail if it doesn't work
     decrypted_data = None
     try:
-        # Try the documentation-based decryption service first
-        decrypted_data = DocumentationDecryptionService.decrypt_to_dict(
-            associated_data=associated_data or "",
+        # Try the Java-based decryption service first (matches official Java documentation)
+        decrypted_data = JavaDecryptionService.decrypt_to_dict(
+            associated_data=associated_data,
             nonce=nonce,
             ciphertext=ciphertext,
             encryption_key=h5_app.encryption_key
         )
-        logger.info(f"Successfully decrypted data for prepayId: {prepay_id} using documentation method")
+        logger.info(f"Successfully decrypted data for prepayId: {prepay_id} using Java pattern method")
         
         # Save decrypted data to the callback file as well
         if filepath:
@@ -388,6 +389,31 @@ def payment_callback(request):
         except Exception as fallback_error:
             logger.warning(f"Fallback decryption also failed: {str(fallback_error)} - continuing without decryption")
             decrypted_data = None
+    except ValueError as e:
+        # Try DocumentationDecryptionService as second fallback if JavaDecryptionService fails
+        logger.warning(f"Java decryption method failed ({str(e)}), trying Python documentation method")
+        try:
+            decrypted_data = DocumentationDecryptionService.decrypt_to_dict(
+                associated_data=associated_data or "",
+                nonce=nonce,
+                ciphertext=ciphertext,
+                encryption_key=h5_app.encryption_key
+            )
+            logger.info(f"Successfully decrypted data using Python documentation method")
+        except Exception as fallback2_error:
+            logger.warning(f"Python documentation method also failed: {str(fallback2_error)} - trying original method")
+            try:
+                decrypted_data = DecryptionService.decrypt_ciphertext(
+                    ciphertext=ciphertext,
+                    encryption_key=h5_app.encryption_key,
+                    algorithm=algorithm,
+                    nonce=nonce,
+                    associated_data=associated_data
+                )
+                logger.info(f"Successfully decrypted data using original method")
+            except Exception as fallback3_error:
+                logger.warning(f"All decryption methods failed: {str(fallback3_error)} - continuing without decryption")
+                decrypted_data = None
     except Exception as e:
         logger.warning(f"Failed to decrypt ciphertext: {str(e)} - continuing without decryption")
         # Don't fail, just continue with None decrypted_data
