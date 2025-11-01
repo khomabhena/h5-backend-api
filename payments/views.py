@@ -173,32 +173,81 @@ def payment_callback(request):
         import traceback
         logger.warning(traceback.format_exc())
     
-    # Parse JSON from raw body to ensure full ciphertext is captured
-    # DRF's request.data might truncate very long strings
+    # Extract ciphertext directly from raw body without JSON parsing to preserve original format
+    import re
+    ciphertext_full = None
+    
+    if raw_body:
+        # Extract ciphertext value directly from raw JSON string
+        # Find the start of "ciphertext":" and extract the value until the closing quote
+        # This preserves the raw, unformatted ciphertext from the original payload
+        ciphertext_pattern = r'"ciphertext"\s*:\s*"'
+        match_start = re.search(ciphertext_pattern, raw_body)
+        
+        if match_start:
+            # Find the position after the opening quote
+            start_pos = match_start.end()
+            
+            # Find the closing quote (handle escaped quotes properly)
+            # Walk through the string to find the actual closing quote
+            pos = start_pos
+            ciphertext_value = []
+            while pos < len(raw_body):
+                char = raw_body[pos]
+                if char == '\\':
+                    # Handle escape sequences
+                    if pos + 1 < len(raw_body):
+                        ciphertext_value.append(char + raw_body[pos + 1])
+                        pos += 2
+                        continue
+                elif char == '"':
+                    # Found closing quote
+                    break
+                else:
+                    ciphertext_value.append(char)
+                pos += 1
+            
+            if pos < len(raw_body):
+                # Successfully found closing quote
+                ciphertext_escaped = ''.join(ciphertext_value)
+                # Unescape JSON string escapes (\", \\, \n, etc.)
+                try:
+                    ciphertext_full = bytes(ciphertext_escaped, 'utf-8').decode('unicode_escape')
+                except:
+                    # If unicode_escape fails, try direct decode
+                    ciphertext_full = ciphertext_escaped
+                logger.info(f"Ciphertext extracted from raw body: {len(ciphertext_full)} characters")
+            else:
+                logger.warning("Could not find closing quote for ciphertext in raw body")
+        else:
+            logger.warning("Could not find 'ciphertext' field in raw body")
+    
+    # Only parse JSON for other fields (not for ciphertext) - use for metadata only
     payload_data = {}
     if raw_body:
         try:
             import json
             payload_data = json.loads(raw_body)
-            logger.info(f"Parsed payload from raw_body: {len(raw_body)} chars")
+            logger.info(f"Parsed payload from raw_body for metadata: {len(raw_body)} chars")
         except Exception as e:
             logger.warning(f"Failed to parse raw_body as JSON: {str(e)}, falling back to request.data")
-            # Fallback to request.data if raw_body parsing fails
             if hasattr(request.data, 'dict'):
                 payload_data = request.data.dict()
             else:
                 payload_data = dict(request.data)
     else:
-        # Fallback to request.data if raw_body not available
         if hasattr(request.data, 'dict'):
             payload_data = request.data.dict()
         else:
             payload_data = dict(request.data)
     
-    # Ensure ciphertext is fully captured (may be very long)
-    ciphertext_full = payload_data.get('ciphertext', '')
+    # Use ciphertext from raw body if extracted, otherwise fallback to parsed JSON
+    if not ciphertext_full:
+        ciphertext_full = payload_data.get('ciphertext', '')
+        if ciphertext_full:
+            logger.info(f"Ciphertext from parsed JSON: {len(ciphertext_full)} characters")
+    
     if ciphertext_full:
-        logger.info(f"Ciphertext length in payload: {len(ciphertext_full)} characters")
         # Log first and last 50 chars to verify it's complete
         if len(ciphertext_full) > 100:
             logger.info(f"Ciphertext preview: {ciphertext_full[:50]}...{ciphertext_full[-50:]}")
@@ -206,21 +255,7 @@ def payment_callback(request):
         else:
             logger.info(f"Ciphertext: {ciphertext_full}")
     else:
-        logger.warning("Ciphertext not found in payload_data!")
-        
-    # Double-check: if raw_body exists, verify ciphertext length matches
-    if raw_body and 'ciphertext' in raw_body:
-        # Extract ciphertext from raw_body to compare lengths
-        try:
-            raw_payload_check = json.loads(raw_body)
-            raw_ciphertext = raw_payload_check.get('ciphertext', '')
-            if raw_ciphertext and len(raw_ciphertext) != len(ciphertext_full):
-                logger.warning(f"CIPHERTEXT LENGTH MISMATCH! Parsed: {len(ciphertext_full)}, Raw: {len(raw_ciphertext)}")
-                logger.warning("Using ciphertext from raw_body instead")
-                payload_data['ciphertext'] = raw_ciphertext
-                ciphertext_full = raw_ciphertext
-        except:
-            pass
+        logger.warning("Ciphertext not found in raw body or payload!")
     
     # Extract headers from request
     headers = {}
@@ -307,16 +342,19 @@ def payment_callback(request):
         logger.error(f"Error saving callback payload to file: {str(e)}")
     
     # Extract callback parameters
+    # Use parsed JSON for metadata fields, but use raw ciphertext extracted above
     serial_no = payload_data.get('serialNo')
     prepay_id = payload_data.get('prepayId')
     algorithm = payload_data.get('algorithm', 'AEAD_AES_256_GCM')
-    ciphertext = payload_data.get('ciphertext')
+    # Use the ciphertext extracted directly from raw body (unformatted), not from parsed JSON
+    ciphertext = ciphertext_full if ciphertext_full else payload_data.get('ciphertext')
     # Use hardcoded values from decrypt.js for testing
     # TODO: Switch back to callback values when ready: nonce = payload_data.get('nonce')
     nonce = payload_data.get('nonce') or "Ft5MhFp5iMJMzGLaCWiTV5UxpK3gKGIz"  # Fallback to decrypt.js value
     associated_data = payload_data.get('associatedData') or "JOYPAY"  # Fallback to decrypt.js value
     
-    # Log ciphertext to a separate folder
+    # Log raw, unformatted ciphertext to a separate folder
+    # Note: ciphertext is extracted directly from raw body, not from JSON parsing
     if ciphertext:
         try:
             from django.conf import settings
@@ -341,7 +379,7 @@ def payment_callback(request):
                 f.write(f"# Associated Data: {associated_data or 'N/A'}\n")
                 f.write(f"# Ciphertext Length: {len(ciphertext)} characters\n")
                 f.write(f"# \n")
-                f.write(f"# Ciphertext (Base64):\n")
+                f.write(f"# Ciphertext (Base64 - Raw, Unformatted from Payload):\n")
                 f.write(ciphertext)
             
             logger.info(f"Ciphertext saved to: {ciphertext_filepath} ({len(ciphertext)} chars)")
