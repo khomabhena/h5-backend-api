@@ -68,6 +68,28 @@ class Payment(models.Model):
     customer_phone = models.CharField(max_length=20, blank=True, null=True)
     order_id = models.CharField(max_length=255, blank=True, null=True, help_text="External order ID")
     
+    # SuperApp decrypted fields (from callback)
+    app_id = models.CharField(max_length=255, blank=True, null=True, help_text="SuperApp App ID")
+    mch_id = models.CharField(max_length=255, blank=True, null=True, help_text="Merchant ID from SuperApp")
+    out_biz_id = models.CharField(max_length=255, blank=True, null=True, help_text="Merchant order number (outBizId)")
+    prepay_id = models.CharField(max_length=255, blank=True, null=True, help_text="Prepay ID from SuperApp")
+    payment_order_id = models.CharField(max_length=255, blank=True, null=True, help_text="Payment Order ID from SuperApp")
+    trade_type = models.CharField(max_length=50, blank=True, null=True, help_text="Trade type (PAYMENT, REFUND, etc.)")
+    superapp_status = models.CharField(max_length=50, blank=True, null=True, help_text="Status from SuperApp (SUCCESS, FAILED, etc.)")
+    description = models.TextField(blank=True, null=True, help_text="Payment description from SuperApp")
+    finish_time = models.BigIntegerField(blank=True, null=True, help_text="Finish time timestamp from SuperApp")
+    order_amount = models.BigIntegerField(blank=True, null=True, help_text="Order amount in smallest currency unit (cents)")
+    paid_amount = models.BigIntegerField(blank=True, null=True, help_text="Paid amount in smallest currency unit (cents)")
+    payment_product = models.CharField(max_length=100, blank=True, null=True, help_text="Payment product (e.g., InAppH5)")
+    callback_info = models.TextField(blank=True, null=True, help_text="Callback info from SuperApp")
+    
+    # Original payment fields (for refunds)
+    original_out_biz_id = models.CharField(max_length=255, blank=True, null=True, help_text="Original merchant order number (for refunds)")
+    original_prepay_id = models.CharField(max_length=255, blank=True, null=True, help_text="Original prepay ID (for refunds)")
+    original_payment_order_id = models.CharField(max_length=255, blank=True, null=True, help_text="Original payment order ID (for refunds)")
+    original_order_amount = models.BigIntegerField(blank=True, null=True, help_text="Original order amount in cents (for refunds)")
+    original_paid_amount = models.BigIntegerField(blank=True, null=True, help_text="Original paid amount in cents (for refunds)")
+    
     class Meta:
         db_table = 'payments'
         verbose_name = 'Payment'

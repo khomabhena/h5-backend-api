@@ -24,18 +24,43 @@ class H5AppAdmin(admin.ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ['payment_ref', 'h5_app', 'amount', 'currency', 'status', 'created_at']
-    list_filter = ['status', 'currency', 'h5_app', 'created_at']
-    search_fields = ['payment_ref', 'customer_email', 'order_id']
-    readonly_fields = ['id', 'created_at', 'updated_at', 'callback_received_at']
+    list_display = ['payment_ref', 'h5_app', 'amount', 'currency', 'status', 'superapp_status', 'created_at']
+    list_filter = ['status', 'superapp_status', 'trade_type', 'currency', 'h5_app', 'created_at']
+    search_fields = ['payment_ref', 'prepay_id', 'payment_order_id', 'out_biz_id', 'customer_email', 'order_id', 'app_id', 'mch_id']
+    readonly_fields = [
+        'id', 'created_at', 'updated_at', 'callback_received_at',
+        # SuperApp fields are read-only (from callbacks)
+        'app_id', 'mch_id', 'out_biz_id', 'prepay_id', 'payment_order_id',
+        'trade_type', 'superapp_status', 'description', 'finish_time',
+        'order_amount', 'paid_amount', 'payment_product', 'callback_info',
+        'original_out_biz_id', 'original_prepay_id', 'original_payment_order_id',
+        'original_order_amount', 'original_paid_amount', 'decrypted_data'
+    ]
     fieldsets = (
         ('Payment Information', {
             'fields': ('payment_ref', 'h5_app', 'amount', 'currency', 'status')
         }),
-        ('Customer Information', {
-            'fields': ('customer_email', 'customer_phone', 'order_id')
+        ('SuperApp Details', {
+            'fields': (
+                'app_id', 'mch_id', 'prepay_id', 'payment_order_id', 'out_biz_id',
+                'trade_type', 'superapp_status', 'payment_product', 'description'
+            )
         }),
-        ('Callback Data', {
+        ('SuperApp Amounts', {
+            'fields': ('order_amount', 'paid_amount', 'finish_time'),
+            'classes': ('collapse',)
+        }),
+        ('Original Payment (Refunds)', {
+            'fields': (
+                'original_out_biz_id', 'original_prepay_id', 'original_payment_order_id',
+                'original_order_amount', 'original_paid_amount'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Customer Information', {
+            'fields': ('customer_email', 'customer_phone', 'order_id', 'callback_info')
+        }),
+        ('Raw Callback Data', {
             'fields': ('ciphertext', 'decrypted_data', 'callback_received_at'),
             'classes': ('collapse',)
         }),

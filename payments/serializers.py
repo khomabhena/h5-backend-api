@@ -76,11 +76,26 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'h5_app', 'h5_app_name', 'h5_app_key', 'payment_ref',
             'amount', 'currency', 'status', 'customer_email', 'customer_phone',
-            'order_id', 'created_at', 'updated_at', 'callback_received_at'
+            'order_id', 'created_at', 'updated_at', 'callback_received_at',
+            # SuperApp decrypted fields
+            'app_id', 'mch_id', 'out_biz_id', 'prepay_id', 'payment_order_id',
+            'trade_type', 'superapp_status', 'description', 'finish_time',
+            'order_amount', 'paid_amount', 'payment_product', 'callback_info',
+            # Original payment fields (for refunds)
+            'original_out_biz_id', 'original_prepay_id', 'original_payment_order_id',
+            'original_order_amount', 'original_paid_amount',
+            # Raw data
+            'decrypted_data'
         ]
         read_only_fields = [
             'id', 'h5_app_name', 'h5_app_key', 'created_at', 'updated_at',
-            'callback_received_at'
+            'callback_received_at',
+            # All SuperApp fields are read-only (populated from callbacks)
+            'app_id', 'mch_id', 'out_biz_id', 'prepay_id', 'payment_order_id',
+            'trade_type', 'superapp_status', 'description', 'finish_time',
+            'order_amount', 'paid_amount', 'payment_product', 'callback_info',
+            'original_out_biz_id', 'original_prepay_id', 'original_payment_order_id',
+            'original_order_amount', 'original_paid_amount', 'decrypted_data'
         ]
     
     def validate_amount(self, value):

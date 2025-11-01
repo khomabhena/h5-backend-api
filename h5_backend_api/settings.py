@@ -83,27 +83,36 @@ WSGI_APPLICATION = 'h5_backend_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# For development - using SQLite
+# MySQL Database Configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME', default='hfive'),
+        'USER': config('DB_USER', default='adminuser'),
+        'PASSWORD': config('DB_PASSWORD', default='AppUserPass456!'),
+        'HOST': config('DB_HOST', default='40.81.17.177'),
+        'PORT': config('DB_PORT', default='3306'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+            # SSL configuration (Azure MySQL requires SSL)
+            # Enable SSL connection - Azure MySQL requires secure transport
+            'ssl': True if not config('DB_SSL_CA', default=None) else {
+                'ca': config('DB_SSL_CA'),
+                'cert': config('DB_SSL_CERT', default=None),
+                'key': config('DB_SSL_KEY', default=None),
+            },
+        },
+        # Connection timeout
+        'CONN_MAX_AGE': 0,  # Use persistent connections
     }
 }
 
-# For production - uncomment and configure MySQL
+# For development - SQLite (commented out, using MySQL)
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': config('DB_NAME', default='h5_backend_api'),
-#         'USER': config('DB_USER', default='root'),
-#         'PASSWORD': config('DB_PASSWORD', default=''),
-#         'HOST': config('DB_HOST', default='localhost'),
-#         'PORT': config('DB_PORT', default='3306'),
-#         'OPTIONS': {
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-#             'charset': 'utf8mb4',
-#         },
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
 

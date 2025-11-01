@@ -22,9 +22,15 @@ class DecryptionService:
         
         Args:
             ciphertext (str): Base64 encoded encrypted data
-            encryption_key (str): The encryption key for this H5 app (32 bytes for AES-256)
-            algorithm (str): Encryption algorithm (default: "AEAD_AES_256_GCM")
-            nonce (str): Base64 encoded nonce (required for GCM)
+            encryption_key (str): The encryption key for this H5 app
+                - For AES-256-GCM: 32 bytes (or base64 encoded)
+                - For AES-192-GCM: 24 bytes (or UTF-8 string bytes)
+            algorithm (str): Encryption algorithm 
+                - "AEAD_AES_256_GCM" (default) - nonce is base64 encoded
+                - "AEAD_AES_192_GCM" - nonce is UTF-8 string bytes
+            nonce (str): Nonce (format depends on algorithm)
+                - AES-256-GCM: Base64 encoded (12 bytes after decode)
+                - AES-192-GCM: UTF-8 string bytes (will be UTF-8 encoded)
             associated_data (str): Associated data string (required for GCM)
             
         Returns:
@@ -33,6 +39,10 @@ class DecryptionService:
         try:
             if algorithm == "AEAD_AES_256_GCM":
                 return DecryptionService._decrypt_aes256_gcm(
+                    ciphertext, encryption_key, nonce, associated_data
+                )
+            elif algorithm == "AEAD_AES_192_GCM":
+                return DecryptionService._decrypt_aes192_gcm(
                     ciphertext, encryption_key, nonce, associated_data
                 )
             else:
@@ -107,6 +117,86 @@ class DecryptionService:
             
         except Exception as e:
             logger.error(f"Failed to decrypt using AES-256-GCM: {str(e)}")
+            raise
+    
+    @staticmethod
+    def _decrypt_aes192_gcm(ciphertext, encryption_key, nonce, associated_data):
+        """
+        Decrypt using AES-192-GCM algorithm (matches JavaScript implementation)
+        
+        This method matches the JS code behavior:
+        - Key is treated as UTF-8 string bytes (literal string, not base64)
+        - Nonce is UTF-8 encoded bytes (not base64)
+        - Auth tag is the last 16 bytes of the ciphertext
+        
+        Args:
+            ciphertext (str): Base64 encoded encrypted data (includes auth tag at end)
+            encryption_key (str): The encryption key as UTF-8 string (24 bytes when encoded)
+            nonce (str): Nonce as UTF-8 string (will be UTF-8 encoded to bytes)
+            associated_data (str): Associated data string
+            
+        Returns:
+            dict: Decrypted payment data
+        """
+        try:
+            # Key: Use UTF-8 encoding of the literal string (matches JS Buffer.from(key, 'utf8'))
+            if isinstance(encryption_key, str):
+                key_bytes = encryption_key.encode('utf-8')
+            else:
+                key_bytes = encryption_key
+            
+            if len(key_bytes) != 24:
+                raise ValueError(f"Encryption key must be 24 bytes for AES-192-GCM. Got {len(key_bytes)} bytes. "
+                               f"Key should be a UTF-8 string that encodes to 24 bytes.")
+            
+            # Nonce: Use UTF-8 encoding (matches JS Buffer.from(nonce, 'utf8'))
+            if nonce:
+                nonce_bytes = nonce.encode('utf-8')
+                if len(nonce_bytes) != 12:
+                    # GCM supports nonces of 12 bytes typically, but let's be flexible
+                    logger.warning(f"Nonce is {len(nonce_bytes)} bytes after UTF-8 encoding (typically 12 bytes for GCM)")
+            else:
+                raise ValueError("Nonce is required for AES-192-GCM decryption")
+            
+            # Decode ciphertext from base64
+            ciphertext_bytes = base64.b64decode(ciphertext)
+            
+            # Extract auth tag (last 16 bytes) and encrypted data (rest)
+            # Matches JS: authTag = ciphertextBuffer.slice(ciphertextBuffer.length - 16)
+            #             encrypted = ciphertextBuffer.slice(0, ciphertextBuffer.length - 16)
+            if len(ciphertext_bytes) < 16:
+                raise ValueError("Ciphertext too short - must be at least 16 bytes (for auth tag)")
+            
+            auth_tag = ciphertext_bytes[-16:]
+            encrypted_data = ciphertext_bytes[:-16]
+            
+            # Associated data as UTF-8 bytes
+            aad_bytes = associated_data.encode('utf-8') if associated_data else b''
+            
+            # For GCM, we need to combine encrypted_data + auth_tag for decryption
+            # Python's AESGCM.decrypt expects the auth tag to be part of the ciphertext
+            # But actually, AESGCM handles it differently - let me check the API
+            
+            # Actually, Python's cryptography library's AESGCM.decrypt expects:
+            # - nonce
+            # - ciphertext (which includes auth tag at the end)
+            # - associated_data
+            # So we should pass the full ciphertext_bytes, not split it
+            
+            # Create AESGCM cipher (works with 24-byte key for AES-192)
+            aesgcm = AESGCM(key_bytes)
+            
+            # Decrypt - AESGCM.decrypt expects ciphertext to include auth tag
+            decrypted_bytes = aesgcm.decrypt(nonce_bytes, ciphertext_bytes, aad_bytes)
+            
+            # Parse JSON
+            payment_data = json.loads(decrypted_bytes.decode('utf-8'))
+            
+            logger.info(f"Successfully decrypted payment data using AES-192-GCM")
+            return payment_data
+            
+        except Exception as e:
+            logger.error(f"Failed to decrypt using AES-192-GCM: {str(e)}")
             raise
     
     @staticmethod
