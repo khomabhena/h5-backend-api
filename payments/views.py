@@ -9,6 +9,7 @@ from django.utils import timezone
 import logging
 import json
 import os
+import traceback
 from pathlib import Path
 from datetime import datetime
 
@@ -20,6 +21,7 @@ from .serializers import (
 from .services import DecryptionService
 
 logger = logging.getLogger('payments')
+db_error_logger = logging.getLogger('db_errors')
 
 
 class H5AppListCreateView(generics.ListCreateAPIView):
@@ -585,13 +587,25 @@ def payment_callback(request):
         logger.info(f"Updated payment {payment_ref} with status: {payment.status}")
     
     except Exception as e:
-        logger.error(f"Error processing payment data: {str(e)}")
-        return Response(
-            {"code": "ERROR", "message": "Failed to process payment"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        # Log database error with full context to db_errors logger
+        error_details = {
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "traceback": traceback.format_exc(),
+            "payment_ref": payment_ref,
+            "prepay_id": prepay_id,
+            "decrypted_data": decrypted_data if 'decrypted_data' in locals() else None,
+            "ciphertext_preview": ciphertext[:100] + "..." if ciphertext and len(ciphertext) > 100 else ciphertext,
+            "timestamp": timezone.now().isoformat(),
+        }
+        db_error_logger.error(f"Database error processing payment: {json.dumps(error_details, indent=2, default=str)}")
+        
+        # Also log to regular logger for console visibility
+        logger.error(f"Database error processing payment data: {str(e)}\n{traceback.format_exc()}")
     
-    # Return success response
+    # Always return success response regardless of database errors
+    # This ensures SuperApp doesn't retry the callback unnecessarily
+    # Payment data is saved in callback-payload folder for manual review
     return Response({"code": "SUCCESS"}, status=status.HTTP_200_OK)
 
 

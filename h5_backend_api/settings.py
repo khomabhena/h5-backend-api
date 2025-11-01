@@ -205,6 +205,12 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'db_error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'db_errors' / 'database_errors.log',
+            'formatter': 'verbose',
+        },
     },
     'root': {
         'handlers': ['console', 'file'],
@@ -217,8 +223,13 @@ LOGGING = {
             'propagate': False,
         },
         'payments': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'db_error_file'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'db_errors': {
+            'handlers': ['console', 'db_error_file'],
+            'level': 'ERROR',
             'propagate': False,
         },
     },
