@@ -1,0 +1,2 @@
+# This file keeps the db_errors directory in git
+# Database error logs are created here but not committed due to *.log in .gitignore
