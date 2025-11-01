@@ -86,33 +86,37 @@ class DecryptionService:
             aad_bytes = aad.encode('utf-8') if aad else b''
             logger.info(f"AAD bytes length: {len(aad_bytes)} bytes")
             
-            # Step 4: Decode ciphertext from base64 - Line 17: Buffer.from(ciphertextBase64, 'base64')
+            # Step 4: Create decipher - Line 11: crypto.createDecipheriv('aes-192-gcm', key, Buffer.from(nonce, 'utf8'))
+            # Python's AESGCM handles 24-byte keys as AES-192 automatically
+            aesgcm = AESGCM(key_bytes)
+            
+            # Step 5: Set associated data - Line 14: decipher.setAAD(Buffer.from(associatedData, 'utf8'))
+            # (In Python, AAD is passed directly to decrypt() call, but we prepare it here)
+            
+            # Step 6: Decode ciphertext from base64 - Line 17: Buffer.from(ciphertextBase64, 'base64')
             ciphertext_buffer = base64.b64decode(ciphertext_val)
             logger.info(f"Ciphertext buffer length: {len(ciphertext_buffer)} bytes")
             
-            # Step 5: Extract auth tag - Line 18: ciphertextBuffer.slice(ciphertextBuffer.length - 16)
+            # Step 7: Extract auth tag - Line 18: ciphertextBuffer.slice(ciphertextBuffer.length - 16)
             if len(ciphertext_buffer) < 16:
                 raise ValueError(f"Ciphertext too short: {len(ciphertext_buffer)} bytes (need at least 16 for auth tag)")
             auth_tag = ciphertext_buffer[-16:]
             logger.info(f"Auth tag (first 4 bytes): {auth_tag[:4].hex()}")
             
-            # Step 6: Extract encrypted data - Line 19: ciphertextBuffer.slice(0, ciphertextBuffer.length - 16)
+            # Step 8: Extract encrypted data - Line 19: ciphertextBuffer.slice(0, ciphertextBuffer.length - 16)
             encrypted = ciphertext_buffer[:-16]
             logger.info(f"Encrypted data length: {len(encrypted)} bytes")
             
-            # Step 7: Create decipher - Line 11: crypto.createDecipheriv('aes-192-gcm', key, Buffer.from(nonce, 'utf8'))
-            # Python's AESGCM handles 24-byte keys as AES-192 automatically
-            aesgcm = AESGCM(key_bytes)
-            
-            # Step 8: Combine encrypted + auth tag for Python's AESGCM
-            # Python's AESGCM.decrypt expects ciphertext with auth tag at the end
+            # Step 9: Set auth tag - Line 21: decipher.setAuthTag(authTag)
+            # Note: Python's AESGCM.decrypt expects auth tag appended to ciphertext
+            # So we combine them here (equivalent to setting auth tag separately in JS)
             ciphertext_with_tag = encrypted + auth_tag
             
-            # Step 9: Decrypt - Line 23: Buffer.concat([decipher.update(encrypted), decipher.final()])
-            # Python does this in one call
+            # Step 10: Decrypt - Line 23: Buffer.concat([decipher.update(encrypted), decipher.final()])
+            # Python does this in one call with the combined ciphertext+tag
             decrypted_bytes = aesgcm.decrypt(nonce_bytes, ciphertext_with_tag, aad_bytes)
             
-            # Step 10: Parse JSON - Line 25: decrypted.toString('utf8')
+            # Step 11: Parse JSON - Line 25: decrypted.toString('utf8')
             decrypted_text = decrypted_bytes.decode('utf-8')
             payment_data = json.loads(decrypted_text)
             
