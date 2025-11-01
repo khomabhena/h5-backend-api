@@ -77,6 +77,7 @@ class DocumentationDecryptionService:
             logger.info(f"Nonce length: {len(nonce_bytes)} bytes")
             
             # Step 3: Base64 decode ciphertext - as shown in documentation
+            # JavaScript: const ciphertextBuffer = Buffer.from(ciphertextBase64, 'base64');
             ciphertext_bytes = base64.b64decode(ciphertext)
             logger.info(f"Ciphertext bytes length: {len(ciphertext_bytes)} bytes")
             
@@ -87,6 +88,7 @@ class DocumentationDecryptionService:
             
             # Step 5: Update with associated data (if provided)
             # Documentation shows: cipher.update(associatedData.encode('utf-8'))
+            # Note: In PyCryptodome, AAD must be set BEFORE decryption
             if associated_data:
                 aad_bytes = associated_data.encode('utf-8')
                 cipher.update(aad_bytes)
@@ -94,14 +96,40 @@ class DocumentationDecryptionService:
             
             # Step 6: Decrypt
             # Documentation shows: decrypted = cipher.decrypt(ciphertext_bytes)
-            # Note: PyCryptodome's decrypt() handles the authentication tag automatically
-            # The ciphertext_bytes should contain the encrypted data + 16-byte auth tag at the end
-            # This is simpler than cryptography.hazmat which requires manual tag extraction
-            decrypted = cipher.decrypt(ciphertext_bytes)
+            # PyCryptodome's decrypt() automatically extracts and verifies the 16-byte auth tag from the end
+            # The ciphertext_bytes should have the encrypted data + 16-byte auth tag at the end
+            try:
+                decrypted = cipher.decrypt(ciphertext_bytes)
+            except ValueError as e:
+                # If auth tag verification fails, try extracting tag manually and using decrypt_and_verify
+                logger.warning(f"Standard decrypt failed: {str(e)}, trying decrypt_and_verify method")
+                if len(ciphertext_bytes) < 16:
+                    raise ValueError(f"Ciphertext too short: {len(ciphertext_bytes)} bytes")
+                auth_tag = ciphertext_bytes[-16:]
+                encrypted_data = ciphertext_bytes[:-16]
+                
+                # Recreate cipher for decrypt_and_verify
+                cipher2 = AES.new(key, AES.MODE_GCM, nonce=nonce_bytes)
+                if associated_data:
+                    cipher2.update(associated_data.encode('utf-8'))
+                decrypted = cipher2.decrypt_and_verify(encrypted_data, auth_tag)
             
             # Step 7: Decode to UTF-8 string
             # Documentation shows: decrypted.decode('utf-8')
-            decrypted_str = decrypted.decode('utf-8')
+            logger.info(f"Decrypted bytes length: {len(decrypted)} bytes")
+            logger.info(f"First 50 bytes (hex): {decrypted[:50].hex() if len(decrypted) > 50 else decrypted.hex()}")
+            
+            # Try to decode as UTF-8, with error handling
+            try:
+                decrypted_str = decrypted.decode('utf-8')
+            except UnicodeDecodeError as e:
+                # Log the problematic bytes for debugging
+                logger.error(f"UTF-8 decode failed at position {e.start}: {e.reason}")
+                logger.error(f"Problematic bytes (hex): {decrypted[max(0, e.start-10):e.start+10].hex()}")
+                # Try to decode with error handling to see partial result
+                decrypted_str = decrypted.decode('utf-8', errors='replace')
+                logger.warning(f"Decoded with replacement characters - original data may be corrupted or wrong key/nonce/AAD used")
+                raise ValueError(f"Decrypted data is not valid UTF-8. This usually means wrong key, nonce, or associated_data. Error: {str(e)}")
             
             logger.info("Successfully decrypted payment data using documentation method")
             return decrypted_str
